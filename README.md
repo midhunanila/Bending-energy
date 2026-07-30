@@ -72,21 +72,6 @@ results = calculate_bending_energy(
 
 ---
 
-## Output
-
-The function returns a dictionary.
-
-```python
-{
- 'energy_sga': [...],
- 'energy_sga2': [...],
- 'energy_gamma': [...],
- 'energy_gamma2': [...],
- 'time': [...]
-}
-```
-
----
 
 ## Method
 
