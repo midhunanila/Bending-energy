@@ -661,8 +661,10 @@ Michaud-Agrawal, N., Denning, E. J., Woolf, T. B., & Beckstein, O.
 
 
 # Author
+Midhun Mohan Anila
 
 Developed for membrane curvature and bending-energy analysis from molecular dynamics simulations.
+
 ## License
 
 This project is released under the MIT License.
