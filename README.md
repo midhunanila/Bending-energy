@@ -162,9 +162,9 @@ Number of grid divisions along the x and y directions.
 
 The membrane surface is divided into:
 
-\[
+$$
 N_{grid} \times N_{grid}
-\]
+$$
 
 cells.
 
@@ -176,9 +176,9 @@ N_GRIDS = 8
 
 creates:
 
-\[
+$$
 8 \times 8 = 64
-\]
+$$
 
 surface elements.
 
@@ -285,9 +285,9 @@ The selected lipid beads are placed into an XY grid.
 
 For every grid cell:
 
-\[
+$$
 h(x,y)=\frac{1}{N}\sum z_i
-\]
+$$
 
 where:
 
@@ -316,18 +316,18 @@ Small Gradient Approximation.
 
 The membrane curvature is approximated as:
 
-\[
+$$
 H \approx \nabla^2 h
-\]
+$$
 
 
 The bending energy is:
 
-\[
+$$
 E =
 \int
 (\nabla^2h)^2 dxdy
-\]
+$$
 
 
 Advantages:
@@ -355,15 +355,15 @@ Uses the same approximation but calculates derivatives using a larger finite dif
 
 Instead of:
 
-\[
+$$
 h(x+\Delta)-h(x-\Delta)
-\]
+$$
 
 it uses:
 
-\[
+$$
 h(x+2\Delta)-h(x-2\Delta)
-\]
+$$
 
 
 Advantages:
@@ -388,24 +388,24 @@ Gamma
 
 Uses the full nonlinear membrane curvature:
 
-\[
+$$
 H=
 \nabla \cdot
 \left(
 \frac{\nabla h}
 {\sqrt{1+|\nabla h|^2}}
 \right)
-\]
+$$
 
 
 The energy is:
 
-\[
+$$
 E=
 \int
 \sqrt{1+|\nabla h|^2}
 H^2 dxdy
-\]
+$$
 
 
 Advantages:
@@ -426,10 +426,10 @@ Gamma2
 
 Same nonlinear curvature method as Gamma but uses central differences:
 
-\[
+$$
 \frac{f(x+\Delta)-f(x-\Delta)}
 {2\Delta}
-\]
+$$
 
 
 Advantages:
@@ -579,17 +579,28 @@ print(universe.residues.resnames)
 
 ---
 
-# Citation
+# Citation and References
 
-If this script is used in scientific work, please cite:
+This script is an independent analysis tool developed for calculating membrane bending energy from molecular dynamics trajectories.
 
-- MDAnalysis:
-  Michaud-Agrawal et al., J Comput Chem (2011)
+If you use this script in your research, please cite the relevant theoretical framework and software dependencies:
 
-- Helfrich membrane curvature theory:
-  Helfrich, Z. Naturforsch. C (1973)
+## Membrane curvature theory
 
----
+The bending energy calculation is based on the Helfrich membrane model:
+
+Helfrich, W.  
+"Elastic properties of lipid bilayers: theory and possible experiments"  
+*Zeitschrift für Naturforschung C*, 28(11–12), 693–703 (1973).
+
+## Molecular dynamics trajectory analysis
+
+Trajectory processing is performed using MDAnalysis:
+
+Michaud-Agrawal, N., Denning, E. J., Woolf, T. B., & Beckstein, O.  
+"MDAnalysis: a toolkit for the analysis of molecular dynamics simulations."  
+*Journal of Computational Chemistry*, 32(10), 2319–2327 (2011).
+
 
 # Author
 
