@@ -55,6 +55,64 @@ Python >= 3.9
 NumPy >= 1.22
 MDAnalysis >= 2.4
 ```
+---
+# Repository Structure
+
+The repository is organized as follows:
+
+```text
+membrane-bending-energy/
+│
+├── src/
+│   └── bending_energy.py
+│       # Main Python script for calculating membrane bending energy
+│
+├── examples/
+│   ├── run_example.sh
+│   │   # Example command for running the analysis
+│   │
+│   └── example_output.txt
+│       # Example bending energy output
+│
+├── README.md
+│   # Documentation, theory, installation, usage, and output description
+│
+├── requirements.txt
+│   # Python package dependencies
+│
+├── LICENSE
+│   # Software license information
+│
+└── .gitignore
+    # Files excluded from Git version control
+```
+
+## File Description
+
+| File | Description |
+|------|-------------|
+| `src/bending_energy.py` | Main Python script for calculating membrane bending energy from GROMACS molecular dynamics trajectories. |
+| `examples/run_example.sh` | Example command showing how to run the analysis. |
+| `examples/example_output.txt` | Example frame-by-frame bending energy output. |
+| `README.md` | Complete documentation including theory, installation, usage, input/output description, and interpretation. |
+| `requirements.txt` | Python dependencies required to run the script. |
+| `LICENSE` | License information for using and distributing the software. |
+| `.gitignore` | Prevents temporary files and large simulation files from being uploaded. |
+
+## Data Management
+
+Large molecular dynamics trajectory files are not included in this repository.
+
+The following files should normally **not** be uploaded:
+
+```text
+*.xtc
+*.trr
+*.tpr
+*.edr
+```
+
+Users should provide their own GROMACS topology and trajectory files.
 
 ---
 
