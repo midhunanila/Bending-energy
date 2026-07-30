@@ -1,284 +1,597 @@
-# Membrane Bending Energy
+# Membrane Bending Energy Calculation from Molecular Dynamics Trajectories
 
-Python implementation of a grid-based membrane bending energy calculation from molecular dynamics trajectories.
+## Overview
 
-## Features
+This Python script calculates the bending energy of lipid membranes from GROMACS molecular dynamics (MD) trajectories.
 
-- MDAnalysis based
-- Supports multiple XTC trajectories
-- Adjustable grid resolution
-- Custom lipid selections
-- Periodic boundary conditions
-- Computes four bending-energy estimators
+The method reconstructs a two-dimensional membrane height surface from selected lipid beads and calculates membrane curvature using four different numerical approaches:
+
+1. Small Gradient Approximation (SGA)
+2. Extended Small Gradient Approximation (SGA2)
+3. Full nonlinear curvature (Gamma)
+4. Full nonlinear curvature with central-difference derivatives (Gamma2)
+
+The script uses:
+
+- **MDAnalysis** for reading GROMACS topology and trajectories
+- **NumPy** for numerical calculations
+
+The output provides frame-by-frame bending energies that can be used to analyze membrane deformation caused by proteins, ligands, phase separation, or other molecular interactions.
 
 ---
 
-## Installation
+# Features
+
+- Reads GROMACS `.gro` topology files
+- Reads GROMACS `.xtc` trajectory files
+- User-defined membrane bead selection
+- User-defined grid resolution
+- Periodic boundary condition treatment
+- Calculates bending energy for every trajectory frame
+- Calculates four curvature estimators
+- Saves frame-wise bending energies
+
+---
+
+# Requirements
+
+Python packages required:
+
+```
+numpy
+MDAnalysis
+```
+
+Install dependencies:
 
 ```bash
-git clone https://github.com/username/membrane_bending_energy.git
+pip install numpy MDAnalysis
+```
 
-cd membrane_bending_energy
+Recommended environment:
 
-pip install -r requirements.txt
+```
+Python >= 3.9
+NumPy >= 1.22
+MDAnalysis >= 2.4
 ```
 
 ---
 
-## Requirements
+# Files Required
 
-- Python ≥3.10
-- numpy
-- scipy
-- MDAnalysis
+The script requires:
 
-Install
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-## Usage
-
-```python
-from bending_energy import calculate_bending_energy
-
-results = calculate_bending_energy(
-
-    gro_file="system.gro",
-
-    xtc_files=["traj.xtc"],
-
-    lipid_selection="resname POPC CHOL",
-
-    n_grids=10,
-
-)
-```
-
----
-
-## Input
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| gro_file | str | GROMACS topology |
-| xtc_files | list | One or more XTC trajectories |
-| lipid_selection | str | MDAnalysis atom selection |
-| n_grids | int | Number of XY grid divisions |
-| use_periodic | bool | Apply periodic boundary conditions |
-
----
-
-
-## Method
-
-1. Select membrane beads.
-2. Divide the membrane plane into an N×N grid.
-3. Compute the mean height (z) in every grid.
-4. Calculate membrane gradients.
-5. Compute local curvature.
-6. Integrate curvature over the membrane surface to estimate bending energy.
-
----
-## Output
-
-The `calculate_bending_energy()` function returns a dictionary containing the bending energy calculated for every trajectory frame.
-
-```python
-results = calculate_bending_energy(...)
-
-results["energy_sga"]
-results["energy_sga2"]
-results["energy_gamma"]
-results["energy_gamma2"]
-results["time"]
-```
-
-Each energy array contains one value per frame in the trajectory.
+## 1. GROMACS topology file
 
 Example:
 
-```python
-{
-    "energy_sga":   [115.2, 116.5, 118.1, ...],
-    "energy_sga2":  [113.8, 114.9, 117.0, ...],
-    "energy_gamma": [121.7, 123.4, 122.8, ...],
-    "energy_gamma2":[120.5, 122.1, 121.9, ...],
-    "time":         [0, 1, 2, 3, ...]
-}
+```
+system.gro
 ```
 
-where
+This contains:
 
-| Key | Description |
-|------|-------------|
-| `energy_sga` | Membrane bending energy calculated using the Small Gradient Approximation (SGA). |
-| `energy_sga2` | Bending energy using the Small Gradient Approximation with a wider finite-difference stencil. |
-| `energy_gamma` | Bending energy computed from the full nonlinear curvature expression. |
-| `energy_gamma2` | Bending energy computed from the nonlinear curvature using central-difference derivatives. |
-| `time` | Trajectory frame index corresponding to each calculated energy value. |
+- atom names
+- residue names
+- coordinates
+- box dimensions
 
 ---
 
-# Description of the Four Curvature Methods
+## 2. GROMACS trajectory file
 
-The package computes four numerical estimates of membrane bending energy. They are **different numerical approximations of the same physical quantity**, allowing users to compare numerical accuracy and assess the validity of the small-gradient approximation.
+Example:
 
-## 1. Small Gradient Approximation (`energy_sga`)
+```
+trajectory.xtc
+```
 
-This method assumes that the membrane is nearly flat,
-
-\[
-|\nabla h| \ll 1,
-\]
-
-where \(h(x,y)\) is the membrane height.
-
-Under this approximation, the mean curvature is approximated by the Laplacian of the height field,
-
-\[
-H \approx \nabla^2 h.
-\]
-
-The bending energy is then calculated as
-
-\[
-E \propto
-\int (\nabla^2 h)^2\,dx\,dy.
-\]
-
-### Advantages
-
-- Computationally efficient
-- Numerically stable
-- Appropriate for nearly planar membranes
-
-### Limitations
-
-- Ignores nonlinear geometric effects
-- Underestimates curvature for strongly bent membranes
+The trajectory contains the membrane coordinates during simulation.
 
 ---
 
-## 2. Small Gradient Approximation with Extended Stencil (`energy_sga2`)
+# Running the Script
 
-This method is identical to `energy_sga` except that second derivatives are evaluated using a larger finite-difference stencil (two grid spacings instead of one).
+The general command format is:
 
-Compared with `energy_sga`, this produces a smoother curvature field and reduces numerical noise.
-
-### Advantages
-
-- Reduced sensitivity to local fluctuations
-- Better suited for noisy trajectories
-- More stable on coarse grids
-
-### Limitations
-
-- Slight loss of spatial resolution
-- May smooth out highly localized curvature
+```bash
+python3 bending_energy.py GRO_FILE XTC_FILE N_GRIDS "ATOM_SELECTION"
+```
 
 ---
 
-## 3. Nonlinear Curvature (`energy_gamma`)
+# Example
 
-This method evaluates the complete mean curvature without assuming small membrane slopes.
+Example system:
 
-The curvature is calculated as
+```
+raw_20.gro
+raw_0.xtc
+```
+
+Run:
+
+```bash
+python3 bending_energy.py \
+raw_20.gro \
+raw_0.xtc \
+8 \
+"resname POPC CHOL DBSM"
+```
+
+---
+
+# Input Parameters
+
+## 1. GRO_FILE
+
+Example:
+
+```
+raw_20.gro
+```
+
+The GROMACS topology file.
+
+---
+
+## 2. XTC_FILE
+
+Example:
+
+```
+raw_0.xtc
+```
+
+The trajectory file.
+
+The script checks whether the file exists and is not empty before loading.
+
+---
+
+## 3. N_GRIDS
+
+Example:
+
+```
+8
+```
+
+Number of grid divisions along the x and y directions.
+
+The membrane surface is divided into:
+
+\[
+N_{grid} \times N_{grid}
+\]
+
+cells.
+
+Example:
+
+```
+N_GRIDS = 8
+```
+
+creates:
+
+\[
+8 \times 8 = 64
+\]
+
+surface elements.
+
+Higher values:
+
+Advantages:
+- better spatial resolution
+
+Disadvantages:
+- more sensitive to noise
+
+
+Lower values:
+
+Advantages:
+- smoother surface
+
+Disadvantages:
+- loss of local curvature information
+
+---
+
+## 4. ATOM_SELECTION
+
+The membrane surface is reconstructed from selected atoms/beads using MDAnalysis selection syntax.
+
+Example:
+
+```bash
+"resname POPC CHOL DBSM"
+```
+
+selects all beads belonging to:
+
+- POPC
+- CHOL
+- DBSM
+
+Other examples:
+
+Only POPC:
+
+```bash
+"resname POPC"
+```
+
+Multiple lipid species:
+
+```bash
+"resname POPC CHOL POPS"
+```
+
+Specific bead:
+
+```bash
+"resname POPC and name PO4"
+```
+
+---
+
+# How the Calculation Works
+
+The workflow is:
+
+```
+GROMACS trajectory
+        |
+        |
+        v
+Select lipid beads
+        |
+        |
+        v
+Divide membrane into grid
+        |
+        |
+        v
+Calculate average z-height
+        |
+        |
+        v
+Generate membrane height surface h(x,y)
+        |
+        |
+        v
+Calculate curvature
+        |
+        |
+        v
+Calculate bending energy
+        |
+        |
+        v
+Save frame-wise energy
+```
+
+---
+
+# Membrane Height Calculation
+
+For every trajectory frame:
+
+The selected lipid beads are placed into an XY grid.
+
+For every grid cell:
+
+\[
+h(x,y)=\frac{1}{N}\sum z_i
+\]
+
+where:
+
+- \(h(x,y)\) is membrane height
+- \(z_i\) are bead coordinates
+
+This produces a two-dimensional membrane surface.
+
+---
+
+# Curvature Calculations
+
+The script calculates four bending-energy estimates.
+
+---
+
+# 1. SGA Energy
+
+Output:
+
+```
+SGA
+```
+
+Small Gradient Approximation.
+
+The membrane curvature is approximated as:
+
+\[
+H \approx \nabla^2 h
+\]
+
+
+The bending energy is:
+
+\[
+E =
+\int
+(\nabla^2h)^2 dxdy
+\]
+
+
+Advantages:
+
+- Fast
+- Stable
+- Suitable for nearly flat membranes
+
+
+Limitations:
+
+- Less accurate for highly curved membranes
+
+---
+
+# 2. SGA2 Energy
+
+Output:
+
+```
+SGA2
+```
+
+Uses the same approximation but calculates derivatives using a larger finite difference stencil.
+
+Instead of:
+
+\[
+h(x+\Delta)-h(x-\Delta)
+\]
+
+it uses:
+
+\[
+h(x+2\Delta)-h(x-2\Delta)
+\]
+
+
+Advantages:
+
+- Reduced numerical noise
+- Smoother curvature calculation
+
+
+Limitations:
+
+- Lower spatial resolution
+
+---
+
+# 3. Gamma Energy
+
+Output:
+
+```
+Gamma
+```
+
+Uses the full nonlinear membrane curvature:
 
 \[
 H=
-\nabla\cdot
+\nabla \cdot
 \left(
 \frac{\nabla h}
 {\sqrt{1+|\nabla h|^2}}
-\right).
+\right)
 \]
 
-The bending energy becomes
+
+The energy is:
 
 \[
 E=
 \int
 \sqrt{1+|\nabla h|^2}
-H^2
-\,dx\,dy,
+H^2 dxdy
 \]
 
-where the additional factor
 
-\[
-\sqrt{1+|\nabla h|^2}
-\]
+Advantages:
 
-accounts for the true membrane surface area.
-
-### Advantages
-
-- Physically accurate for strongly curved membranes
-- Includes nonlinear geometric corrections
-- Closely follows the Helfrich bending-energy formalism
-
-### Limitations
-
-- Computationally more expensive
-- More sensitive to numerical noise
+- More physically accurate
+- Includes membrane slope effects
+- Suitable for highly deformed membranes
 
 ---
 
-## 4. Nonlinear Curvature with Central Differences (`energy_gamma2`)
+# 4. Gamma2 Energy
 
-This method computes the same nonlinear curvature as `energy_gamma` but evaluates spatial derivatives using central differences,
+Output:
+
+```
+Gamma2
+```
+
+Same nonlinear curvature method as Gamma but uses central differences:
 
 \[
-\frac{f(x+\Delta)-f(x-\Delta)}{2\Delta},
+\frac{f(x+\Delta)-f(x-\Delta)}
+{2\Delta}
 \]
 
-instead of forward differences.
 
-Central differences generally provide second-order numerical accuracy and reduce directional bias.
+Advantages:
 
-### Advantages
-
-- Improved derivative accuracy
+- Higher numerical accuracy
 - Reduced discretization error
-- Recommended for high-quality analyses
 
-### Limitations
-
-- Requires a sufficiently smooth height field
-- Can be slightly more sensitive to noisy data
+Recommended for publication-quality analysis.
 
 ---
 
-# Interpretation of the Results
+# Output
 
-The four energy estimates should agree closely for nearly flat membranes.
+After completion the script generates:
 
-As membrane curvature increases, the nonlinear methods (`energy_gamma` and `energy_gamma2`) generally predict larger bending energies because they account for nonlinear geometric effects neglected by the small-gradient approximation.
+```
+energy_binding_results.txt
+```
 
-For example,
+---
 
-| Method | Bending Energy |
-|---------|---------------:|
-| `energy_sga` | 132.4 |
-| `energy_sga2` | 129.8 |
-| `energy_gamma` | 141.5 |
-| `energy_gamma2` | 139.7 |
+## Output File Format
 
-In this example, the nonlinear methods predict higher bending energies due to stronger membrane deformations, while the small-gradient approximations underestimate the curvature contribution.
+Example:
 
-For highly curved membranes (e.g., protein-induced deformation, budding, or tubulation), `energy_gamma2` is generally recommended as the primary estimator because it combines the full nonlinear curvature expression with a more accurate central-difference approximation.
-## Citation
+```
+Frame   SGA       SGA2      Gamma     Gamma2
+0       12.345    11.876    13.521    13.210
+1       12.512    12.021    13.782    13.450
+2       12.734    12.213    14.012    13.821
+```
 
-If you use this software in published work, please cite
+---
 
-Author et al.
+# Output Columns
 
-Journal
+| Column | Description |
+|---|---|
+| Frame | MD trajectory frame number |
+| SGA | Small-gradient bending energy |
+| SGA2 | Extended small-gradient bending energy |
+| Gamma | Nonlinear curvature bending energy |
+| Gamma2 | Nonlinear curvature using central differences |
 
-Year
+---
 
-DOI
+# Interpretation of Results
+
+For a flat membrane:
+
+```
+SGA ≈ SGA2 ≈ Gamma ≈ Gamma2
+```
+
+For strongly curved membranes:
+
+```
+Gamma and Gamma2 > SGA and SGA2
+```
+
+because nonlinear curvature includes geometric corrections ignored by the small-gradient approximation.
+
+---
+
+# Example Analysis
+
+Load results:
+
+```python
+import numpy as np
+
+data = np.loadtxt(
+    "energy_binding_results.txt",
+    skiprows=1
+)
+
+frame = data[:,0]
+
+SGA = data[:,1]
+
+SGA2 = data[:,2]
+
+Gamma = data[:,3]
+
+Gamma2 = data[:,4]
+```
+
+Calculate average bending energy:
+
+```python
+print(np.mean(Gamma2))
+```
+
+---
+
+# Notes
+
+## Periodic Boundary Conditions
+
+The script applies periodic indexing:
+
+```python
+(i+1)%N_grid
+```
+
+to handle membrane boundaries.
+
+---
+
+## Grid Selection
+
+Recommended:
+
+| Membrane size | Grid |
+|-|-|
+| Small membrane | 6-10 |
+| Medium membrane | 10-20 |
+| Large membrane | 20+ |
+
+---
+
+# Troubleshooting
+
+## Error: No usable XTC files found
+
+Check:
+
+- trajectory path
+- file size
+- permissions
+
+
+## Error: Empty output
+
+Possible causes:
+
+- incorrect atom selection
+- wrong residue names
+- missing membrane beads
+
+
+Check selection:
+
+```python
+print(universe.residues.resnames)
+```
+
+---
+
+# Citation
+
+If this script is used in scientific work, please cite:
+
+- MDAnalysis:
+  Michaud-Agrawal et al., J Comput Chem (2011)
+
+- Helfrich membrane curvature theory:
+  Helfrich, Z. Naturforsch. C (1973)
+
+---
+
+# Author
+
+Developed for membrane curvature and bending-energy analysis from molecular dynamics simulations.
+
