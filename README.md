@@ -552,37 +552,6 @@ because nonlinear curvature includes geometric corrections ignored by the small-
 
 ---
 
-# Example Analysis
-
-Load results:
-
-```python
-import numpy as np
-
-data = np.loadtxt(
-    "energy_binding_results.txt",
-    skiprows=1
-)
-
-frame = data[:,0]
-
-SGA = data[:,1]
-
-SGA2 = data[:,2]
-
-Gamma = data[:,3]
-
-Gamma2 = data[:,4]
-```
-
-Calculate average bending energy:
-
-```python
-print(np.mean(Gamma2))
-```
-
----
-
 # Notes
 
 ## Periodic Boundary Conditions
