@@ -95,7 +95,7 @@ membrane-bending-energy/
 | `README.md` | Complete documentation including theory, installation, usage, input/output description, and interpretation. |
 | `requirements.txt` | Python dependencies required to run the script. |
 | `LICENSE` | License information for using and distributing the software. |
-| `.gitignore` | Prevents temporary files and large simulation files from being uploaded. |
+
 
 ## Data Management
 
