@@ -81,10 +81,8 @@ membrane-bending-energy/
 │   # Python package dependencies
 │
 ├── LICENSE
-│   # Software license information
-│
-└── .gitignore
-    # Files excluded from Git version control
+    # Software license information
+
 ```
 
 ## File Description
